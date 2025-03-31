@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 const RichTextEditor = () => {
   const editorRef = useRef(null);
+
+  // States for different features like table, image, link, etc.
   const [showTablePopup, setShowTablePopup] = useState(false);
   const [rows, setRows] = useState(3);
   const [cols, setCols] = useState(3);
@@ -16,11 +18,35 @@ const RichTextEditor = () => {
   const [keepAspectRatio, setKeepAspectRatio] = useState(true);
 
 
+  // Save HTML to LocalStorage
+  const saveHTMLContent = () => {
+    if (editorRef.current) {
+      localStorage.setItem("editorContent", editorRef.current.innerHTML);
+      alert("Content saved!");
+    }
+  };
+
+  // Load HTML from LocalStorage when the component mounts
+  useEffect(() => {
+    const savedContent = localStorage.getItem("editorContent");
+    if (savedContent && editorRef.current) {
+      editorRef.current.innerHTML = savedContent;
+    }
+  }, []);
+
+  const getHTMLContent = () => {
+    if (editorRef.current) {
+      console.log(editorRef.current.innerHTML); // Show HTML content in an alert
+    }
+  };
+
+
   // ======================= Insert HTML =======================
+  // Function to insert HTML into the editor
   const insertHTML = (html) => {
-    editorRef.current.focus();
+    editorRef.current.focus(); // Focus the editor
     const selection = window.getSelection();
-    if (!selection.rangeCount) return;
+    if (!selection.rangeCount) return; // If no selection is made, return
 
     const range = selection.getRangeAt(0);
     range.deleteContents(); // Remove selected content
@@ -49,15 +75,16 @@ const RichTextEditor = () => {
     }
   };
 
-
+  // ======================= Handle Command =======================
+  // General command handler (bold, italic, etc.)
   const handleCommand = (command, value = null) => {
     editorRef.current.focus();
-    document.execCommand(command, false, value);
+    document.execCommand(command, false, value); // Executes the given command on the editor
   };
 
-
-
   // ======================= Insert Table =======================
+  // Handle inserting a table
+
   const handleTableInsert = () => {
     let tableHtml = '<table border="1" style="width:100%; border-collapse: collapse; margin: 10px 0;">';
     for (let i = 0; i < rows; i++) {
@@ -68,13 +95,12 @@ const RichTextEditor = () => {
       tableHtml += '</tr>';
     }
     tableHtml += '</table>';
-    insertHTML(tableHtml);
-    setShowTablePopup(false);
+    insertHTML(tableHtml); // Insert the generated table HTML
+    setShowTablePopup(false); // Close the table popup
   };
 
-
-
-  // ======================= Insert Img =======================
+  // ======================= Insert Image =======================
+  // Handle inserting an image
   const handleImageInsert = () => {
     if (!imageUrl.trim()) {
       setShowImagePopup(false);
@@ -86,16 +112,17 @@ const RichTextEditor = () => {
     if (imgHeight && !keepAspectRatio) style += `height:${imgHeight}px;`;
 
     const imgTag = `<img src="${imageUrl}" alt="Inserted image" style="${style}">`;
-    insertHTML(imgTag);
+    insertHTML(imgTag); // Insert the image HTML
 
+    // Reset image URL and dimensions
     setShowImagePopup(false);
-    setImageUrl(""); // Reset URL input
-    setImgWidth(""); // Reset width
-    setImgHeight(""); // Reset height
+    setImageUrl("");
+    setImgWidth("");
+    setImgHeight("");
   };
 
-
   // ======================= Insert Link =======================
+  // Handle inserting a link
   const handleLinkInsert = () => {
     if (!linkUrl) {
       setShowLinkPopup(false);
@@ -103,39 +130,42 @@ const RichTextEditor = () => {
     }
 
     // Generate the HTML for the anchor tag
-    const linkHTML = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+    const linkHTML = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText || linkUrl}</a>`;
 
     // Insert the link HTML into the editor using insertHTML
     insertHTML(linkHTML);
 
     // Reset states and close the popup after inserting the link
     setShowLinkPopup(false);
-    setLinkUrl(''); // Clear the link URL input
-    setLinkText(''); // Clear the link text input
+    setLinkUrl('');
+    setLinkText('');
   };
 
-
-
-
-
+  // ======================= Font Size =======================
+  // Handle changing the font size
   const handleFontSizeChange = (e) => {
     handleCommand('fontSize', 7); // Reset to default size
-    handleCommand('fontSize', e.target.value);
+    handleCommand('fontSize', e.target.value); // Apply the selected font size
   };
 
+  // ======================= Text Color =======================
+  // Handle changing the text color
   const handleTextColorChange = (e) => {
     handleCommand('foreColor', e.target.value);
   };
 
+  // ======================= Background Color =======================
+  // Handle changing the background color
   const handleBgColorChange = (e) => {
     handleCommand('hiliteColor', e.target.value);
   };
 
+  // ======================= Font Family =======================
+  // Handle changing the font family
   const handleFontFamilyChange = (e) => {
     const fontFamily = e.target.value;
-    handleCommand('fontName', fontFamily);
+    handleCommand('fontName', fontFamily); // Apply the selected font family
   };
-
 
   return (
     <div className="rich-text-editor-container">
@@ -155,7 +185,7 @@ const RichTextEditor = () => {
         <button onClick={() => handleCommand('insertOrderedList')} title="Numbered List">OL</button>
         <button onClick={() => handleCommand('insertUnorderedList')} title="Bulleted List">UL</button>
 
-        {/* select font family  */}
+        {/* Font family selection */}
         <select onChange={handleFontFamilyChange} title="Font Family">
           <option value="Arial">Arial</option>
           <option value="Courier New">Courier New</option>
@@ -168,8 +198,7 @@ const RichTextEditor = () => {
           <option value="Comic Sans MS">Comic Sans MS</option>
         </select>
 
-
-        {/* Font size */}
+        {/* Font size selection */}
         <select onChange={handleFontSizeChange} defaultValue="3" title="Font Size">
           <option value="1">8px (Tiny)</option>
           <option value="2">10px (Small)</option>
@@ -201,8 +230,17 @@ const RichTextEditor = () => {
         <button onClick={() => handleCommand('undo')} title="Undo (Ctrl+Z)">↩</button>
         <button onClick={() => handleCommand('redo')} title="Redo (Ctrl+Y)">↪</button>
         <button onClick={() => handleCommand('removeFormat')} title="Clear Formatting">✕</button>
+
+
+        <button onClick={saveHTMLContent} >
+          Save HTML
+        </button>
+
+        <button onClick={getHTMLContent}>Get HTML</button>
       </div>
 
+
+      {/* Editor Area */}
       <div
         ref={editorRef}
         className="editor"
@@ -248,6 +286,7 @@ const RichTextEditor = () => {
         <div className="popup">
           <div className="popup-content">
             <h3>Insert Image</h3>
+
             <div className="form-group">
               <label>Image URL:</label>
               <input
@@ -258,24 +297,28 @@ const RichTextEditor = () => {
                 autoFocus
               />
             </div>
+
             <div className="form-group">
               <label>Width (px):</label>
               <input
                 type="number"
                 value={imgWidth}
                 onChange={(e) => setImgWidth(e.target.value)}
-                placeholder="Auto"
-                min="1"
+                placeholder="Optional"
               />
             </div>
+
             <div className="form-group">
               <label>Height (px):</label>
               <input
                 type="number"
                 value={imgHeight}
-                onChange={(e) => setImgHeight(e.target.value)}
-                placeholder="Auto"
-                min="1"
+                onChange={(e) => {
+                  if (keepAspectRatio) return;
+                  setImgHeight(e.target.value);
+                }}
+                placeholder="Optional"
+                disabled={keepAspectRatio}
               />
             </div>
             <div className="form-group checkbox-group">
@@ -287,6 +330,7 @@ const RichTextEditor = () => {
               />
               <label htmlFor="keepAspect">Maintain aspect ratio</label>
             </div>
+
             <div className="popup-buttons">
               <button onClick={handleImageInsert}>Insert</button>
               <button onClick={() => setShowImagePopup(false)}>Cancel</button>
@@ -311,12 +355,12 @@ const RichTextEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Text to display (optional):</label>
+              <label>Text to Display:</label>
               <input
                 type="text"
                 value={linkText}
                 onChange={(e) => setLinkText(e.target.value)}
-                placeholder="Leave blank to use URL or selected text"
+                placeholder="Optional"
               />
             </div>
             <div className="popup-buttons">
@@ -326,8 +370,10 @@ const RichTextEditor = () => {
           </div>
         </div>
       )}
+
     </div>
-  );
-};
+  )
+}
+
 
 export default RichTextEditor;
