@@ -1,0 +1,11 @@
+✅ Bold, Italic, Underline
+✅ Text Alignment (Left, Center, Right)
+✅ Ordered List (OL), Unordered List (UL)
+✅ Font Size (Fully Functional - No Limitations)
+✅ Font Color & Background Color
+✅ Insert Table (Custom Rows & Columns)
+✅ Insert Image (via URL)
+✅ Insert Link
+✅ Blockquote, StrikeThrough, Subscript, Superscript
+✅ Undo & Redo
+✅ Horizontal Line & Remove Formatting
