@@ -16,9 +16,22 @@ const RichTextEditor = () => {
   const [imgWidth, setImgWidth] = useState('');
   const [imgHeight, setImgHeight] = useState('');
   const [keepAspectRatio, setKeepAspectRatio] = useState(true);
+  const [htmlContent, setHtmlContent] = useState('');
 
+  useEffect(() => {
+    const savedContent = localStorage.getItem("editorContent");
+    if (savedContent && editorRef.current) {
+      editorRef.current.innerHTML = savedContent;
+      setHtmlContent(savedContent);
+    }
+  }, []);
 
-  // Save HTML to LocalStorage
+  const updateHtmlPreview = () => {
+    if (editorRef.current) {
+      setHtmlContent(editorRef.current.innerHTML);
+    }
+  };
+
   const saveHTMLContent = () => {
     if (editorRef.current) {
       localStorage.setItem("editorContent", editorRef.current.innerHTML);
@@ -26,23 +39,6 @@ const RichTextEditor = () => {
     }
   };
 
-  // Load HTML from LocalStorage when the component mounts
-  useEffect(() => {
-    const savedContent = localStorage.getItem("editorContent");
-    if (savedContent && editorRef.current) {
-      editorRef.current.innerHTML = savedContent;
-    }
-  }, []);
-
-  const getHTMLContent = () => {
-    if (editorRef.current) {
-      console.log(editorRef.current.innerHTML); // Show HTML content in an alert
-    }
-  };
-
-
-  // ======================= Insert HTML =======================
-  // Function to insert HTML into the editor
   const insertHTML = (html) => {
     editorRef.current.focus(); // Focus the editor
     const selection = window.getSelection();
@@ -73,24 +69,27 @@ const RichTextEditor = () => {
         selection.addRange(range);
       }
     }
+
+    updateHtmlPreview();
   };
 
   // ======================= Handle Command =======================
   // General command handler (bold, italic, etc.)
   const handleCommand = (command, value = null) => {
     editorRef.current.focus();
-    document.execCommand(command, false, value); // Executes the given command on the editor
+    document.execCommand(command, false, value);
+    updateHtmlPreview();
   };
 
   // ======================= Insert Table =======================
   // Handle inserting a table
 
   const handleTableInsert = () => {
-    let tableHtml = '<table border="1" style="width:100%; border-collapse: collapse; margin: 10px 0;">';
+    let tableHtml = '<table border="1" style="width:100%; border-collapse: collapse;">';
     for (let i = 0; i < rows; i++) {
       tableHtml += '<tr>';
       for (let j = 0; j < cols; j++) {
-        tableHtml += `<td style="padding: 8px; border: 1px solid #ddd;">Cell ${i + 1}-${j + 1}</td>`;
+        tableHtml += `<td style="padding: 8px;">Cell ${i + 1}-${j + 1}</td>`;
       }
       tableHtml += '</tr>';
     }
@@ -236,7 +235,6 @@ const RichTextEditor = () => {
           Save HTML
         </button>
 
-        <button onClick={getHTMLContent}>Get HTML</button>
       </div>
 
 
@@ -245,6 +243,7 @@ const RichTextEditor = () => {
         ref={editorRef}
         className="editor"
         contentEditable
+        onInput={updateHtmlPreview}
         spellCheck="true"
       ></div>
 
@@ -371,9 +370,21 @@ const RichTextEditor = () => {
         </div>
       )}
 
+      {/* Raw HTML Preview Section */}
+      <div style={{ marginTop: '20px' }}>
+        <h3>Raw HTML Output:</h3>
+        <pre style={{
+          background: '#f4f4f4',
+          padding: '10px',
+          border: '1px solid #ccc',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word'
+        }}>
+          {htmlContent}
+        </pre>
+      </div>
     </div>
-  )
-}
-
+  );
+};
 
 export default RichTextEditor;
